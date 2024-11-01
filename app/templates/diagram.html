@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>UML Диаграмма на D3.js</title>
+    <style>
+        /* Ваши стили */
+        .class-rect {
+            fill: #f9f9f9;
+            stroke: #000;
+            stroke-width: 1px;
+            cursor: move;
+        }
+        .class-text {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            pointer-events: none;
+        }
+        .link {
+            stroke: #000;
+            stroke-width: 1.5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>UML Диаграмма на D3.js</h1>
+    <!-- Контейнер для диаграммы -->
+    <svg id="uml-diagram" width="100%" height="800"></svg>
+
+    <!-- Подключаем D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // Получаем данные из Flask
+        var classesData = {{ classes_data | tojson }};
+
+        var svg = d3.select("#uml-diagram");
+
+        // Добавляем маркер для стрелки наследования
+        svg.append('defs').append('marker')
+            .attr('id', 'inheritance')
+            .attr('viewBox', '0 -5 10 10')
+            .attr('refX', 10)
+            .attr('refY', 0)
+            .attr('markerWidth', 10)
+            .attr('markerHeight', 10)
+            .attr('orient', 'auto')
+            .append('path')
+            .attr('d', 'M0,-5L10,0L0,5')
+            .attr('fill', '#000');
+
+        // Создаём симуляцию D3
+        var simulation = d3.forceSimulation()
+            .force("link", d3.forceLink().distance(200).strength(1))
+            .force("charge", d3.forceManyBody().strength(-500))
+            .force("center", d3.forceCenter(500, 400))
+            .force("collision", d3.forceCollide().radius(function(d) {
+                return d.width ? d.width / 2 : 50;
+            }));
+
+        // Создаём массив для связей
+        var linksData = classesData.relationships.map(function(rel) {
+            return {
+                source: classesData.classes.find(function(c) { return c.name === rel.from; }),
+                target: classesData.classes.find(function(c) { return c.name === rel.to; }),
+                type: rel.type
+            };
+        });
+
+        // Создаём линии
+        var link = svg.selectAll(".link")
+            .data(linksData)
+            .enter()
+            .append("line")
+            .attr("class", "link")
+            .attr('marker-end', function(d) {
+                if (d.type === 'inheritance') {
+                    return 'url(#inheritance)';
+                } else {
+                    return '';
+                }
+            });
+
+        // Создаём группы для классов
+        var classNodes = svg.selectAll(".class")
+            .data(classesData.classes)
+            .enter()
+            .append("g")
+            .attr("class", "class")
+            .call(d3.drag()
+                .on("start", dragStarted)
+                .on("drag", dragged)
+                .on("end", dragEnded)
+            );
+
+        // Добавляем прямоугольники
+        classNodes.append("rect")
+            .attr("class", "class-rect")
+            .attr("width", function(d) {
+                var maxWidth = getMaxTextWidth(d);
+                d.width = maxWidth + 20; // Добавляем отступы
+                return d.width;
+            })
+            .attr("height", function(d) {
+                var lineCount = getTotalLines(d);
+                d.height = lineCount * 16 + 10; // 16px - высота строки
+                return d.height;
+            });
+
+        // Добавляем текст
+        classNodes.each(function(d) {
+            var y = 15;
+            var group = d3.select(this);
+
+            // Имя класса
+            group.append("text")
+                .attr("class", "class-text")
+                .attr("x", 10)
+                .attr("y", y)
+                .text(d.name);
+
+            y += 16;
+
+            // Атрибуты
+            if (d.attributes.length > 0) {
+                group.append("text")
+                    .attr("class", "class-text")
+                    .attr("x", 10)
+                    .attr("y", y)
+                    .text('-----------------');
+                y += 16;
+
+                d.attributes.forEach(function(attr) {
+                    group.append("text")
+                        .attr("class", "class-text")
+                        .attr("x", 10)
+                        .attr("y", y)
+                        .text(attr);
+                    y += 16;
+                });
+            }
+
+            // Методы
+            if (d.methods.length > 0) {
+                group.append("text")
+                    .attr("class", "class-text")
+                    .attr("x", 10)
+                    .attr("y", y)
+                    .text('-----------------');
+                y += 16;
+
+                d.methods.forEach(function(method) {
+                    group.append("text")
+                        .attr("class", "class-text")
+                        .attr("x", 10)
+                        .attr("y", y)
+                        .text(method);
+                    y += 16;
+                });
+            }
+        });
+
+        // Устанавливаем начальные позиции
+        classNodes.attr("transform", function(d) {
+            d.x = Math.random() * 800 + 100;
+            d.y = Math.random() * 600 + 100;
+            return "translate(" + d.x + "," + d.y + ")";
+        });
+
+        // Функции для получения максимальной ширины текста и общего количества строк
+        function getMaxTextWidth(d) {
+            var texts = [d.name];
+            if (d.attributes.length > 0) {
+                texts.push('-----------------');
+                texts = texts.concat(d.attributes);
+            }
+            if (d.methods.length > 0) {
+                texts.push('-----------------');
+                texts = texts.concat(d.methods);
+            }
+            var maxWidth = 0;
+            var tempText = svg.append("text").attr("class", "class-text");
+
+            texts.forEach(function(text) {
+                tempText.text(text);
+                var width = tempText.node().getBBox().width;
+                if (width > maxWidth) maxWidth = width;
+            });
+
+            tempText.remove();
+            return maxWidth;
+        }
+
+        function getTotalLines(d) {
+            var count = 1; // Имя класса
+            if (d.attributes.length > 0) {
+                count += 1 + d.attributes.length;
+            }
+            if (d.methods.length > 0) {
+                count += 1 + d.methods.length;
+            }
+            return count;
+        }
+
+        // Обновляем симуляцию
+        simulation
+            .nodes(classesData.classes)
+            .on("tick", ticked);
+
+        simulation.force("link")
+            .links(linksData);
+
+        // Добавляем переменную для отслеживания количества тиков
+var tickCount = 0;
+
+function ticked() {
+    tickCount++;
+    if (tickCount > 100) {
+        simulation.stop();
+    }
+
+    link
+        .attr("x1", function(d) { return d.source.x + d.source.width / 2; })
+        .attr("y1", function(d) { return d.source.y + d.source.height / 2; })
+        .attr("x2", function(d) { return d.target.x + d.target.width / 2; })
+        .attr("y2", function(d) { return d.target.y + d.target.height / 2; });
+
+    classNodes.attr("transform", function(d) {
+        return "translate(" + d.x + "," + d.y + ")";
+    });
+}
+
+function dragStarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+}
+
+function dragged(event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+
+    // Обновляем позиции узла
+    d.x = event.x;
+    d.y = event.y;
+
+    // Обновляем позиции связей
+    link
+        .attr("x1", function(l) { return l.source.x + l.source.width / 2; })
+        .attr("y1", function(l) { return l.source.y + l.source.height / 2; })
+        .attr("x2", function(l) { return l.target.x + l.target.width / 2; })
+        .attr("y2", function(l) { return l.target.y + l.target.height / 2; });
+
+    classNodes.attr("transform", function(d) {
+        return "translate(" + d.x + "," + d.y + ")";
+    });
+}
+
+function dragEnded(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    // Фиксируем позиции узла после перетаскивания
+    d.fx = d.x;
+    d.fy = d.y;
+}
+    </script>
+</body>
+</html>
