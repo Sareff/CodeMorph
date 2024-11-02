@@ -43,26 +43,32 @@ def diagram():
     # classes_data = analyze_files(file_paths)
 
     # Для примера создадим фиктивные данные
-
     classes_data = {
-    'classes': [
-        {
-            'name': 'Person',
-            'attributes': ['+ name: String', '+ age: Integer'],
-            'methods': ['+ getName(): String', '+ setName(name: String)']
-        },
-        {
-            'name': 'Student',
-            'attributes': ['+ studentID: Integer'],
-            'methods': ['+ getStudentID(): Integer'],
-        },
-        # ... другие классы ...
-    ],
-    'relationships': [
-        {'from': 'Student', 'to': 'Person', 'type': 'inheritance'},
-        # ... другие отношения ...
-    ]
-}
+        'classes': [
+            {
+                'name': 'Person',
+                'attributes': ['+ name: String', '+ age: Integer'],
+                'methods': ['+ getName(): String', '+ setName(name: String)'],
+                'info': 'Класс Person представляет собой человека.'
+            },
+            {
+                'name': 'Student',
+                'attributes': ['+ studentID: Integer'],
+                'methods': ['+ getStudentID(): Integer'],
+                'info': 'Класс Student наследуется от Person и представляет студента.'
+            },
+            {
+                'name': 'Teacher',
+                'attributes': ['+ subject: String'],
+                'methods': ['+ getSubject(): String'],
+                'info': 'Класс Teacher наследуется от Person и представляет преподавателя.'
+            }
+        ],
+        'relationships': [
+            {'from': 'Student', 'to': 'Person', 'type': 'inheritance'},
+            {'from': 'Teacher', 'to': 'Person', 'type': 'inheritance'}
+        ]
+    }
 
     return render_template('diagram.html', classes_data=classes_data)
 
