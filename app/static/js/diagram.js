@@ -98,8 +98,8 @@ function initPanZoom() {
         controlIconsEnabled: true,
         fit: true,
         center: true,
-        minZoom: 0.25,
-        maxZoom: 5,
+        minZoom: 0.3,
+        maxZoom: 2,
         zoomScaleSensitivity: 0.3,
         panEnabled: true
     });
