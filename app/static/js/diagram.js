@@ -97,6 +97,10 @@ function initPanZoom() {
         zoomEnabled: true,
         controlIconsEnabled: true,
         fit: true,
-        center: true
+        center: true,
+        minZoom: 0.25,
+        maxZoom: 5,
+        zoomScaleSensitivity: 0.3,
+        panEnabled: true
     });
 }
