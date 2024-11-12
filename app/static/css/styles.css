@@ -1,0 +1,28 @@
+/* static/css/styles.css */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+#uml-container {
+    width: 100%;
+    height: 700px;
+    overflow: hidden;
+    position: relative;
+}
+
+#uml-diagram {
+    width: 100%;
+    height: 100%;
+}
+
+#uml-diagram svg {
+    width: 100%;
+    height: 100%;
+}
+
+svg {
+    display: block;
+}
