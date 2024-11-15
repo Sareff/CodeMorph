@@ -1,0 +1,44 @@
+{
+    "classes": [
+        {
+            "name": "Person",
+            "bases": [],
+            "methods": [
+                {
+                    "name": "__init__",
+                    "args": [
+                        "name",
+                        "age"
+                    ],
+                    "returns": null
+                }
+            ],
+            "attributes": [
+                "name",
+                "age"
+            ],
+            "associations": []
+        },
+        {
+            "name": "Student",
+            "bases": [
+                "Person"
+            ],
+            "methods": [
+                {
+                    "name": "__init__",
+                    "args": [
+                        "name",
+                        "age",
+                        "student_id"
+                    ],
+                    "returns": null
+                }
+            ],
+            "attributes": [
+                "student_id"
+            ],
+            "associations": []
+        }
+    ]
+}
