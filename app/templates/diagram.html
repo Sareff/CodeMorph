@@ -1,21 +1,19 @@
-<!-- templates/diagram.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>UML Диаграмма на Mermaid.js</title>
-    <!-- Подключаем Mermaid.js -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.min.js" integrity="sha256-G8ouPAnw4zzMbnAenHnVz6h9XpKbNdOkrqTh7AadyHs=" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>
-    <!-- Подключаем наши стили (если есть) -->
+    <!-- Подключаем Mermaid.js локально -->
+    <script src="{{ url_for('static', filename='js/mermaid.min.js') }}"></script>
+    <!-- Подключаем svg-pan-zoom локально -->
+    <script src="{{ url_for('static', filename='js/svg-pan-zoom.min.js') }}"></script>
+    <!-- Подключаем наши стили -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <h1>UML Диаграмма на Mermaid.js</h1>
-    <!-- Обновляем стили контейнера -->
-    <div id="uml-container"> 
-        <!-- Добавляем дополнительный контейнер с классом для стилизации -->
-        <div id="uml-diagram" class="mermaid"></div>
+    <!-- Контейнер для диаграммы -->
+    <div id="uml-container">
+        <div id="uml-diagram"></div>
     </div>
 
     <!-- Передаём данные в JavaScript -->
@@ -25,15 +23,5 @@
 
     <!-- Подключаем наш JavaScript-файл -->
     <script src="{{ url_for('static', filename='js/diagram.js') }}"></script>
-
-    <script>
-        svgPanZoom('#uml-diagram svg', {
-            zoomEnabled: true,
-            controlIconsEnabled: true,
-            fit: true,
-            center: true
-        });
-    </script>
-
 </body>
 </html>
