@@ -1,101 +1,80 @@
 # -*- coding: utf-8 -*-
 import os
 from app import app
-from flask import request, redirect, url_for, render_template
+from flask import request, redirect, url_for, render_template, flash, session
 from utils import FileUtils
 
-os.makedirs(app.config.get("UPLOAD_FOLDER"), exist_ok=True)
+app.secret_key = '123SUPERSECRET'
+
+
+UPLOAD_FOLDER = app.config.get("UPLOAD_FOLDER")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 @app.route("/")
 def index():
-    return redirect(url_for("upload_files"))
+    return redirect(url_for("upload"))
 
 
 @app.route('/upload', methods=['GET', 'POST'])
-def upload_files():
+def upload():
     if request.method == 'POST':
-        if 'files[]' not in request.files:
-            return 'No files part in the request', 400
+        if 'code_file' not in request.files:
+            flash('Файл не выбран')
+            return redirect(request.url)
+        file = request.files['code_file']
+        if file.filename == '':
+            flash('Файл не выбран')
+            return redirect(request.url)
+        if file and FileUtils.allowed_file(file.filename, app.config.get("ALLOWED_EXTENTIONS")):
+            filename = FileUtils.secure_filename(file.filename)
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(file_path)
 
-        files = request.files.getlist('files[]')
+            # Анализируем загруженный файл
+            classes_data = FileUtils.analyze_code(file_path)
+            print(classes_data)
 
-        if not files:
-            return 'No files selected', 400
+            # Удаляем загруженный файл после анализа (по желанию)
+            os.remove(file_path)
 
-        for file in files:
-            if file and FileUtils.allowed_file(file.filename, app.config.get("ALLOWED_EXTENTIONS")):
-                filename = FileUtils.secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            else:
-                return f'File {file.filename} is not allowed', 400
-
-        return redirect(url_for('diagram'))
-
-    return render_template('upload.html')
+            # Передаём данные в шаблон для построения диаграммы
+            session['classes_data'] = classes_data
+            return redirect(url_for('diagram'))
+        else:
+            flash('Разрешены только файлы с расширением .py')
+            return redirect(request.url)
+    else:
+        return render_template('upload.html')
 
 
 @app.route('/diagram')
 def diagram():
-    # Получаем список загруженных файлов
-    uploaded_files = os.listdir(app.config['UPLOAD_FOLDER'])
-    file_paths = [os.path.join(app.config['UPLOAD_FOLDER'], filename) for filename in uploaded_files]
-
-    # Здесь вызываем парсер и анализатор
-    # Например:
-    # classes_data = analyze_files(file_paths)
-
-    # Для примера создадим фиктивные данные
-    classes_data = {
-        'classes': [
-            {
-                'name': 'Person',
-                'attributes': ['+String name', '+Integer age'],
-                'methods': ['+getName() String', '+setName(String name)'],
-                'info': 'This is the Person class, representing a generic person.'
-            },
-            {
-                'name': 'Student',
-                'attributes': ['+Integer studentID'],
-                'methods': ['+getStudentID() Integer'],
-                'info': 'The Student class, inheriting from Person.'
-            },
-            # Добавьте другие классы по необходимости
-        ],
-        'relationships': [
-            {'from': 'Student', 'to': 'Person', 'type': 'inheritance'},
-            # Добавьте другие отношения по необходимости
-        ]
-    }
-
+    classes_data = session.get('classes_data')
+    if not classes_data:
+        flash('Нет данных для отображения диаграммы.')
+        return redirect(url_for('upload'))
     return render_template('diagram.html', classes_data=classes_data)
 
 
 @app.route('/class/<class_name>')
 def class_page(class_name):
-    # Найдите информацию о классе
-    classes = {
-        cls['name']: cls for cls in [
-            {
-                'name': 'Person',
-                'attributes': ['+ name: String', '+ age: Integer'],
-                'methods': ['+ getName(): String', '+ setName(name: String)'],
-                'info': 'This is the Person class, representing a generic person.'
-            },
-            {
-                'name': 'Student',
-                'attributes': ['+ studentID: Integer'],
-                'methods': ['+ getStudentID(): Integer'],
-                'info': 'The Student class, inheriting from Person.'
-            },
-            # Добавьте другие классы по необходимости
-        ]
-    }
-    class_info = classes.get(class_name)
+    classes_data = session.get('classes_data')
+    if not classes_data:
+        flash('Нет данных о классах. Пожалуйста, загрузите файл с кодом.')
+        return redirect(url_for('upload'))
+
+    # Ищем информацию о классе
+    class_info = None
+    for cls in classes_data['classes']:
+        if cls['name'] == class_name:
+            class_info = cls
+            break
+
     if class_info:
         return render_template('class.html', class_info=class_info)
     else:
-        return f"Class {class_name} not found.", 404
+        return f"Класс {class_name} не найден.", 404
 
 
 @app.errorhandler(413)

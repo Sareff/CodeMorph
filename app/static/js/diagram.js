@@ -12,22 +12,35 @@ mermaid.initialize({
 function generateMermaidDiagram(data) {
     let diagram = 'classDiagram\n\n';
 
+    // Создаём словарь для быстрого доступа к классам по их имени
+    let classMap = {};
     data.classes.forEach((cls, index) => {
-        let classId = `Class${index}`;
+        classMap[cls.name] = cls;
+    });
+
+    // Массив для хранения уже добавленных имён классов, чтобы избежать дублирования
+    let addedClasses = new Set();
+
+    // Функция для добавления класса в диаграмму
+    function addClassToDiagram(cls) {
+        if (addedClasses.has(cls.name)) {
+            return;
+        }
+        addedClasses.add(cls.name);
+
+        let classId = `Class_${cls.name.replace(/\W/g, '_')}`;
         cls.id = classId;
 
         diagram += `class ${classId}["${cls.name}"] {\n`;
 
         // Обрабатываем атрибуты
-        cls.attributes.forEach(attr => {
-            // Удаляем пробел после символа видимости и корректируем синтаксис
+        (cls.attributes || []).forEach(attr => {
             const processedAttr = attr.replace(/^([+#-])\s+/, '$1').replace(':', ' ');
             diagram += `  ${processedAttr}\n`;
         });
 
         // Обрабатываем методы
-        cls.methods.forEach(method => {
-            // Удаляем пробел после символа видимости и корректируем синтаксис
+        (cls.methods || []).forEach(method => {
             const processedMethod = method.replace(/^([+#-])\s+/, '$1').replace(':', ' ');
             diagram += `  ${processedMethod}\n`;
         });
@@ -36,17 +49,50 @@ function generateMermaidDiagram(data) {
 
         // Добавляем директиву клика для класса
         diagram += `click ${classId} call openClassPage(${cls.name}) "${cls.name}"\n\n`;
+    }
+
+    // Добавляем все классы из данных
+    data.classes.forEach(cls => {
+        addClassToDiagram(cls);
     });
 
-    // Определяем отношения
+    // Обрабатываем отношения
     data.relationships.forEach(rel => {
-        let fromClass = data.classes.find(cls => cls.name === rel.from);
-        let toClass = data.classes.find(cls => cls.name === rel.to);
+        let fromClass = classMap[rel.from];
+        let toClass = classMap[rel.to];
+
+        // Если базовый класс не найден, создаём его как абстрактный класс
+        if (!toClass) {
+            toClass = {
+                name: rel.to,
+                attributes: ["+ this is imported class"],
+                methods: [],
+                info: '',
+                isAbstract: true
+            };
+            classMap[rel.to] = toClass;
+            addClassToDiagram(toClass);
+        }
+
+        // Если производный класс не добавлен в диаграмму, добавляем его
+        if (!fromClass) {
+            fromClass = {
+                name: rel.from,
+                attributes: [],
+                methods: [],
+                info: ''
+            };
+            classMap[rel.from] = fromClass;
+            addClassToDiagram(fromClass);
+        }
 
         let relationSymbol = '-->';
         if (rel.type === 'inheritance') {
             relationSymbol = '<|--';
+        } else if (rel.type === 'association') {
+            relationSymbol = '--';
         }
+
         diagram += `${toClass.id} ${relationSymbol} ${fromClass.id}\n`;
     });
 
@@ -97,10 +143,6 @@ function initPanZoom() {
         zoomEnabled: true,
         controlIconsEnabled: true,
         fit: true,
-        center: true,
-        minZoom: 0.3,
-        maxZoom: 2,
-        zoomScaleSensitivity: 0.3,
-        panEnabled: true
+        center: true
     });
 }

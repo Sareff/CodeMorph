@@ -4,13 +4,25 @@ import os
 import re
 import unicodedata
 
+
 class FileUtils:
+    @staticmethod
     def allowed_file(filename: str, extentions: List[str]) -> bool:
         """
         Проверяет имеет ли файл filename разрешенное расширение из списка extentions
         """
         return "." in filename and filename.rsplit(".", 1)[1].lower() in extentions
 
+    @staticmethod
+    def analyze_code(file_path: str) -> str:
+        # Здесь мы вызываем наш анализатор кода
+        # Предположим, что у нас есть функция analyze_file, которая возвращает classes_data
+        from analyzer import analyze_file
+        classes_data = analyze_file(file_path)
+        print(classes_data)
+        return classes_data
+
+    @staticmethod
     def secure_filename(filename):
         """
         Преобразует имя файла в безопасный формат для использования на файловой системе.
