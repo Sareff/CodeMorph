@@ -2,43 +2,34 @@
     "classes": [
         {
             "name": "Person",
-            "bases": [],
-            "methods": [
-                {
-                    "name": "__init__",
-                    "args": [
-                        "name",
-                        "age"
-                    ],
-                    "returns": null
-                }
-            ],
             "attributes": [
-                "name",
-                "age"
+                "+String name",
+                "+Integer age"
             ],
-            "associations": []
+            "methods": [
+                "+__init__(String name, Integer age)",
+                "+get_name() String",
+                "+set_name(String name)"
+            ],
+            "info": "This is the Person class, representing a generic person."
         },
         {
             "name": "Student",
-            "bases": [
-                "Person"
+            "attributes": [
+                "+Integer student_id"
             ],
             "methods": [
-                {
-                    "name": "__init__",
-                    "args": [
-                        "name",
-                        "age",
-                        "student_id"
-                    ],
-                    "returns": null
-                }
+                "+__init__(String name, Integer age, Integer student_id)",
+                "+get_student_id() Integer"
             ],
-            "attributes": [
-                "student_id"
-            ],
-            "associations": []
+            "info": "The Student class, inheriting from Person."
+        }
+    ],
+    "relationships": [
+        {
+            "from": "Student",
+            "to": "Person",
+            "type": "inheritance"
         }
     ]
 }
