@@ -19,31 +19,43 @@ def index():
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
-        if 'code_file' not in request.files:
-            flash('Файл не выбран')
+        # Проверяем, были ли отправлены файлы
+        if 'code_files' not in request.files:
+            flash('Файлы не выбраны')
             return redirect(request.url)
-        file = request.files['code_file']
-        if file.filename == '':
-            flash('Файл не выбран')
+
+        files = request.files.getlist('code_files')
+        if not files or files[0].filename == '':
+            flash('Файлы не выбраны')
             return redirect(request.url)
-        if file and FileUtils.allowed_file(file.filename, app.config.get("ALLOWED_EXTENTIONS")):
-            filename = FileUtils.secure_filename(file.filename)
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(file_path)
 
-            # Анализируем загруженный файл
-            classes_data = FileUtils.analyze_code(file_path)
-            print(classes_data)
+        saved_files = []
+        for file in files:
+            if file and FileUtils.allowed_file(file.filename, extentions=app.config.get("ALLOWED_EXTENTIONS")):
+                filename = FileUtils.secure_filename(file.filename)
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(file_path)
+                saved_files.append(file_path)
+            else:
+                flash(f'Файл {file.filename} имеет недопустимое расширение и будет пропущен.')
 
-            # Удаляем загруженный файл после анализа (по желанию)
+        if not saved_files:
+            flash('Нет допустимых файлов для анализа.')
+            return redirect(request.url)
+
+        # Анализируем загруженные файлы
+        classes_data = FileUtils.analyze_files(saved_files)
+        print(classes_data)
+
+        # Удаляем загруженные файлы после анализа
+        for file_path in saved_files:
             os.remove(file_path)
 
-            # Передаём данные в шаблон для построения диаграммы
-            session['classes_data'] = classes_data
-            return redirect(url_for('diagram'))
-        else:
-            flash('Разрешены только файлы с расширением .py')
-            return redirect(request.url)
+        # Сохраняем данные в сессии
+        session['classes_data'] = classes_data
+
+        # Перенаправляем на диаграмму
+        return redirect(url_for('diagram'))
     else:
         return render_template('upload.html')
 

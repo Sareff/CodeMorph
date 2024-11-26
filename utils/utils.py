@@ -23,6 +23,11 @@ class FileUtils:
         return classes_data
 
     @staticmethod
+    def analyze_files(file_paths):
+        from analyzer import analyze_files
+        return analyze_files(file_paths)
+
+    @staticmethod
     def secure_filename(filename):
         """
         Преобразует имя файла в безопасный формат для использования на файловой системе.

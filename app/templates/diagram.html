@@ -1,27 +1,22 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>UML Диаграмма на Mermaid.js</title>
-    <!-- Подключаем Mermaid.js локально -->
-    <script src="{{ url_for('static', filename='js/mermaid.min.js') }}"></script>
-    <!-- Подключаем svg-pan-zoom локально -->
-    <script src="{{ url_for('static', filename='js/svg-pan-zoom.min.js') }}"></script>
-    <!-- Подключаем наши стили -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-    <!-- Контейнер для диаграммы -->
-    <div id="uml-container">
-        <div id="uml-diagram"></div>
-    </div>
+{% extends "base.html" %}
 
-    <!-- Передаём данные в JavaScript -->
-    <script>
-        var classesData = {{ classes_data | tojson }};
-    </script>
+{% block title %}Диаграмма - CodeMorph{% endblock %}
 
-    <!-- Подключаем наш JavaScript-файл -->
-    <script src="{{ url_for('static', filename='js/diagram.js') }}"></script>
-</body>
-</html>
+{% block content %}
+<h1 class="text-center">UML Диаграмма</h1>
+<div id="uml-container" class="text-center">
+    <div id="uml-diagram"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Передаём данные в JavaScript -->
+<script>
+    var classesData = {{ classes_data | tojson }};
+</script>
+
+<!-- Подключаем Mermaid.js и svg-pan-zoom -->
+<script src="{{ url_for('static', filename='js/mermaid.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/svg-pan-zoom.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/diagram.js') }}"></script>
+{% endblock %}

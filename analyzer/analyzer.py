@@ -176,18 +176,27 @@ class CodeAnalyzer(ast.NodeVisitor):
             return ''
 
 
-def analyze_file(file_path):
+def analyze_file(file_path, analyzer=None):
     with open(file_path, 'r', encoding='utf-8') as f:
         source_code = f.read()
 
     tree = ast.parse(source_code)
-    analyzer = CodeAnalyzer()
+    if analyzer is None:
+        analyzer = CodeAnalyzer()
     analyzer.visit(tree)
+    return analyzer
+
+
+def analyze_files(file_paths):
+    analyzer = CodeAnalyzer()
+    for file_path in file_paths:
+        analyze_file(file_path, analyzer=analyzer)
 
     classes_data = {
         'classes': analyzer.classes,
         'relationships': analyzer.relationships
     }
+    print(classes_data)
 
     return classes_data
 

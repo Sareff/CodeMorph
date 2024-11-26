@@ -1,24 +1,19 @@
-<!-- templates/upload.html -->
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Загрузка файла с кодом</title>
-</head>
-<body>
-    <h1>Загрузите файл с кодом для анализа</h1>
-    <form method="post" action="{{ url_for('upload') }}" enctype="multipart/form-data">
-        <input type="file" name="code_file" accept=".py" required>
-        <button type="submit">Загрузить и построить диаграмму</button>
-    </form>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul>
-        {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Загрузка файлов - CodeMorph{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h1 class="text-center">Загрузка файлов с кодом</h1>
+        <p class="text-center">Вы можете загрузить один или несколько файлов Python для анализа и генерации UML-диаграммы.</p>
+        <form method="post" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="code_files">Выберите файлы (.py):</label>
+                <input type="file" class="form-control-file" id="code_files" name="code_files" accept=".py" multiple required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Загрузить и построить диаграмму</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

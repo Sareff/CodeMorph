@@ -1,28 +1,24 @@
-<!-- templates/class.html -->
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Класс {{ class_info.name }}</title>
-</head>
-<body>
-    <h1>{{ class_info.name }}</h1>
-    <p>{{ class_info.info }}</p>
+{% extends "base.html" %}
 
-    <h2>Атрибуты</h2>
-    <ul>
-        {% for attr in class_info.attributes %}
-            <li>{{ attr }}</li>
-        {% endfor %}
-    </ul>
+{% block title %}Класс {{ class_info.name }} - UML Генератор{% endblock %}
 
-    <h2>Методы</h2>
-    <ul>
-        {% for method in class_info.methods %}
-            <li>{{ method }}</li>
-        {% endfor %}
-    </ul>
+{% block content %}
+<h1 class="text-center">Класс: {{ class_info.name }}</h1>
+<p>{{ class_info.info }}</p>
 
-    <a href="{{ url_for('diagram') }}">Вернуться к диаграмме</a>
-</body>
-</html>
+<h2>Атрибуты:</h2>
+<ul>
+    {% for attr in class_info.attributes %}
+        <li>{{ attr }}</li>
+    {% endfor %}
+</ul>
+
+<h2>Методы:</h2>
+<ul>
+    {% for method in class_info.methods %}
+        <li>{{ method }}</li>
+    {% endfor %}
+</ul>
+
+<p><a href="{{ url_for('diagram') }}" class="btn btn-secondary">Вернуться к диаграмме</a></p>
+{% endblock %}
