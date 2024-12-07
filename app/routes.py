@@ -4,9 +4,6 @@ from app import app
 from flask import request, redirect, url_for, render_template, flash, session
 from utils import FileUtils
 
-app.secret_key = '123SUPERSECRET'
-
-
 UPLOAD_FOLDER = app.config.get("UPLOAD_FOLDER")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 

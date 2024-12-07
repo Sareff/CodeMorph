@@ -45,6 +45,10 @@ function generateMermaidDiagram(data) {
             diagram += `  ${processedMethod}\n`;
         });
 
+        if (cls.methods.length === 0 && cls.attributes.length === 0) {
+            diagram += `  + Empty class`
+        }
+
         diagram += '}\n\n';
 
         // Добавляем директиву клика для класса
@@ -78,7 +82,7 @@ function generateMermaidDiagram(data) {
         if (!fromClass) {
             fromClass = {
                 name: rel.from,
-                attributes: [],
+                attributes: ["+ this is fromClass"],
                 methods: [],
                 info: ''
             };
